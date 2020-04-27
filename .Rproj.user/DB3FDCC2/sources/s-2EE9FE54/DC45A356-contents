@@ -1,0 +1,103 @@
+require(officer)
+require(dplyr)
+require(data.table)
+require(flextable)
+library(rvg)
+require(ggrepel)
+require(rlang)
+require(xml2)
+library(bizdays)
+create.calendar(name="myCalendar", weekdays=c('saturday', 'sunday'))
+
+inches <<- 0.393700787
+sapply(list.files('./R/', full.names = T, recursive = T), source, encoding = 'UTF-8')
+master = 'Capgemini Invent 2019'
+
+
+### GAPS
+my_general <- read_pptx('DocExamp.pptx') %>% 
+  add_slide(layout = '2_Divider Page', master = master)
+
+
+
+dt_examp <- data.table::data.table(readxl::read_excel('Example.xlsx', sheet = 'GAPS'))
+
+slide_1 <- dt_examp[1,]
+
+
+# my_general <- remove_slides(my_general, index = 3)
+
+for(i in 1:2){
+  print(i)
+  my_pres <- gen_slide_gaps(dt_examp[i, ])
+  append_slide(x = my_general, 
+               slide = my_pres$slide$get_slide(1), media_copy = T)
+}
+### fin GAPS ---------------------------
+
+my_general <- my_general %>% 
+  add_slide(layout = '2_Divider Page', master = master)
+
+## Iniciativas ----------------------------
+dt_examp <- data.table::data.table(readxl::read_excel('Example.xlsx', 
+                                                      sheet = 'Iniciativas'))
+for(i in 1:2){
+  print(i)
+  my_pres <- gen_slide_iniciativas(dt_examp[i, ])
+  append_slide(x = my_general, 
+               slide = my_pres$slide$get_slide(1), media_copy = T)
+}
+
+# Prioridad vs complejidad --------------------------------
+set.seed(123)
+comp_prop <- dt_examp %>% 
+  ggplot(aes(x = Prioridad, y = Complejidad)) + 
+  geom_label_repel(aes(label = ID_Iniciativa), fill = '#ffd152',
+                   alpha = 1, segment.color = NA, 
+                   
+                   seed = 123, label.r = .4) +
+  scale_y_continuous(limits = c(.5, 3.5)) + scale_x_reverse(limits = c(3.5, 0.5)) + 
+  labs(x='', y='') + 
+  theme(panel.background = element_rect(fill = "transparent", colour = NA),
+        plot.background = element_rect(fill = "transparent", colour = NA),
+        panel.grid.major = element_blank(), # get rid of major grid
+        panel.grid.minor = element_blank(), # get rid of minor grid
+        plot.margin = margin(0,0,0,0, 'cm'), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+
+my_g <- read_pptx(path = 'Template.pptx') %>% 
+  select_slides(index = 4)
+my_g <- ph_with(my_g, value = dml(ggobj = comp_prop, bg = 'transparent'), 
+                      location = ph_location(
+                        left = 4.8 * inches,
+                        top = 4.26 * inches, 
+                        height = 12.36 * inches, 
+                        width = 23.34 * inches))
+my_g$slide$save_slides()
+my_general = append_slide(x = my_general, slide = my_g$slide$get_slide(1), media_copy = F)
+
+##### Ini + GAPS --------------------------
+
+dt_examp <- data.table::data.table(readxl::read_excel('Example.xlsx', 
+                                                      sheet = 'Iniciativas'))
+
+ini_gap = relaciones_gen(dt_examp, id = 'ID_Iniciativa', rel = 'ID_GAPS')
+for(i in unique(ini_gap$ID_Iniciativa)[1:4]){
+  print(i)
+  my_pres <- gen_slide_iniciativas(dt_examp[dt_examp$ID_Iniciativa == i, ])
+  append_slide(x = my_general, 
+               slide = my_pres$slide$get_slide(1), media_copy = T)
+  total_slides = gen_slide_conj(gaps = ini_gap$ID_GAPS[ini_gap$ID_Iniciativa == i])
+  for(i in 1:length(total_slides)){
+    append_slide(x = my_general, 
+                 slide = total_slides[[i]]$slide$get_slide(1), 
+                 media_copy = F)
+  }
+  
+}
+
+print(my_general, target = tempfile(fileext = '.pptx')) %>% browseURL()
+print(my_pres, target = tempfile(fileext = '.pptx')) %>% browseURL()
+
+  

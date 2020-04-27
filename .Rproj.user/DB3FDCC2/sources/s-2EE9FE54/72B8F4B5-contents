@@ -1,0 +1,18 @@
+Package: PtxGenerator
+Type: Package
+Title: PAckage to generate pptx automatically
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: The package maintainer <puigjos@gmail.com>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+  	officer (>= 0.3),
+  	rlang (>= 0.4),
+    dplyr, 
+    ggplot2, 
+    data.table, 
+    xml2
