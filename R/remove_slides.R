@@ -13,5 +13,7 @@ remove_slides <- function(x, index){
 select_slides <- function(x, index){
   numb_slides = seq_along(x)
   rem_slides <- numb_slides[!numb_slides %in% index]
+  if(length(rem_slides) == 0){return(x)}
   remove_slides(x, index = rem_slides)
+  return(x)
 }

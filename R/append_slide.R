@@ -1,6 +1,18 @@
 
 
+#' Title
+#' Append two slides
+#'
+#' @param x rpptx object
+#' @param slide slide object. Slide to Add
+#' @param media_copy T if the slide object has images or svg files (icons,...)
+#'
+#' @return
+#' @export
+#'
+#' @examples
 append_slide <- function(x, slide, media_copy = F){
+
   new_slidename <- x$slide$get_new_slidename()
 
   file.rename(from = slide$file_name(),
@@ -33,10 +45,10 @@ append_slide <- function(x, slide, media_copy = F){
     media_folder = dirname(dirname(slide$file_name()))
     media_folder_from = paste0(media_folder, '/media/')
 
-    media_folder_to = dirname(paste0(x$package_dir, '/ppt/media/'))
-    media_folder_to = paste0(media_folder_to, '/media/')
-    if(dir.exists(media_folder_to)){
-      dir.create(media_folder_to)
+    media_folder_to = dirname(paste0(x$package_dir, '/ppt/'))
+    media_folder_to = paste0(media_folder_to, '/ppt/media/')
+    if(!dir.exists(media_folder_to)){
+      dir.create(media_folder_to, recursive = T)
     }
     for(file in list.files(media_folder_from, full.names = T)){
       file.copy(from = file,
